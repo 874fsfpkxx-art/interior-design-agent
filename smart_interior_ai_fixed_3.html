@@ -1,0 +1,1573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Interior AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #F5F0E8;
+    --warm: #E8DDD0;
+    --sand: #C9B99A;
+    --clay: #9C7B5A;
+    --dark: #1A1410;
+    --charcoal: #2D2520;
+    --accent: #8B6914;
+    --text: #3D3028;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--cream);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* Custom cursor */
+  .cursor {
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: transform 0.1s ease;
+  }
+  .cursor-ring {
+    width: 32px; height: 32px;
+    border: 1px solid var(--clay);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%, -50%);
+    transition: all 0.15s ease;
+    opacity: 0.6;
+  }
+
+  /* Nav */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 24px 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(245, 240, 232, 0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(201, 185, 154, 0.3);
+  }
+  .logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: var(--dark);
+  }
+  .logo span { color: var(--accent); font-style: italic; }
+  nav a {
+    text-decoration: none;
+    color: var(--clay);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+  nav a:hover { color: var(--accent); }
+  .nav-links { display: flex; gap: 40px; align-items: center; }
+  .nav-tg {
+    background: var(--dark);
+    color: var(--cream) !important;
+    padding: 10px 20px;
+    border-radius: 2px;
+    transition: background 0.2s !important;
+  }
+  .nav-tg:hover { background: var(--accent) !important; color: var(--cream) !important; }
+
+  /* Hero */
+  .hero {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-left {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 140px 64px 80px;
+    position: relative;
+    z-index: 2;
+  }
+  .hero-tag {
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--clay);
+    margin-bottom: 32px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .hero-tag::before {
+    content: '';
+    width: 40px; height: 1px;
+    background: var(--clay);
+  }
+  h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(52px, 6vw, 88px);
+    font-weight: 300;
+    line-height: 1.05;
+    color: var(--dark);
+    margin-bottom: 32px;
+  }
+  h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+  .hero-sub {
+    font-size: 12px;
+    line-height: 2;
+    color: var(--clay);
+    max-width: 380px;
+    margin-bottom: 56px;
+    letter-spacing: 0.02em;
+  }
+  .hero-cta {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .btn-primary {
+    background: var(--dark);
+    color: var(--cream);
+    border: none;
+    padding: 16px 36px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: none;
+    text-decoration: none;
+    display: inline-block;
+    transition: background 0.25s, transform 0.2s;
+    border-radius: 2px;
+  }
+  .btn-primary:hover { background: var(--accent); transform: translateY(-2px); }
+  .btn-secondary {
+    background: transparent;
+    color: var(--dark);
+    border: 1px solid var(--sand);
+    padding: 16px 36px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: none;
+    text-decoration: none;
+    display: inline-block;
+    transition: border-color 0.25s, color 0.25s;
+    border-radius: 2px;
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+  .hero-right {
+    position: relative;
+    overflow: hidden;
+    background: var(--charcoal);
+  }
+  .hero-room {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    opacity: 0.85;
+  }
+  .hero-room-placeholder {
+    width: 100%; height: 100%;
+    background: linear-gradient(135deg, #2D2520 0%, #3D3028 40%, #1A1410 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .room-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 2px;
+    width: 100%; height: 100%;
+    position: absolute; inset: 0;
+  }
+  .room-cell {
+    background: linear-gradient(135deg, rgba(139,105,20,0.15), rgba(201,185,154,0.08));
+    position: relative;
+    overflow: hidden;
+  }
+  .room-cell::after {
+    content: attr(data-label);
+    position: absolute;
+    bottom: 16px; left: 16px;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(245,240,232,0.4);
+  }
+  .room-cell:nth-child(1) { background: linear-gradient(135deg, #3D3028, #2D2520); }
+  .room-cell:nth-child(2) { background: linear-gradient(135deg, #4A3B2E, #3D3028); }
+  .room-cell:nth-child(3) { background: linear-gradient(135deg, #2D2520, #1A1410); }
+  .room-cell:nth-child(4) { background: linear-gradient(135deg, #3D3028, #4A3B2E); }
+
+  .hero-badge {
+    position: absolute;
+    bottom: 40px; left: 40px;
+    background: rgba(245,240,232,0.1);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(201,185,154,0.2);
+    padding: 16px 20px;
+    border-radius: 4px;
+  }
+  .hero-badge p {
+    font-size: 10px;
+    color: rgba(245,240,232,0.6);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .hero-badge strong {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    color: var(--cream);
+    display: block;
+    margin-top: 4px;
+  }
+
+  /* Chat section */
+  .chat-section {
+    padding: 120px 64px;
+    background: var(--dark);
+    position: relative;
+    overflow: hidden;
+  }
+  .chat-section::before {
+    content: 'AI';
+    position: absolute;
+    right: -40px; top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 300px;
+    color: rgba(255,255,255,0.02);
+    font-weight: 600;
+    pointer-events: none;
+  }
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 64px;
+  }
+  .section-tag {
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--sand);
+    margin-bottom: 16px;
+  }
+  h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(36px, 4vw, 56px);
+    font-weight: 300;
+    color: var(--cream);
+    line-height: 1.15;
+  }
+  h2 em { font-style: italic; color: var(--sand); }
+
+  /* Chat UI */
+  .chat-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: start;
+  }
+  .chat-window {
+    background: rgba(245,240,232,0.04);
+    border: 1px solid rgba(201,185,154,0.15);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .chat-header {
+    padding: 16px 20px;
+    background: rgba(245,240,232,0.06);
+    border-bottom: 1px solid rgba(201,185,154,0.1);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .chat-avatar {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+  .chat-name {
+    font-size: 12px;
+    color: var(--cream);
+    letter-spacing: 0.05em;
+  }
+  .chat-status {
+    font-size: 10px;
+    color: var(--sand);
+    margin-top: 2px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .status-dot {
+    width: 6px; height: 6px;
+    background: #4CAF50;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .chat-messages {
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-height: 420px;
+    overflow-y: auto;
+  }
+  .msg {
+    display: flex;
+    gap: 10px;
+    animation: fadeUp 0.4s ease forwards;
+    opacity: 0;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .msg.user { flex-direction: row-reverse; }
+  .msg-avatar {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+  }
+  .msg-avatar.bot { background: var(--accent); }
+  .msg-avatar.user { background: rgba(201,185,154,0.3); }
+  .msg-bubble {
+    max-width: 75%;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 11px;
+    line-height: 1.8;
+    letter-spacing: 0.01em;
+  }
+  .msg.bot .msg-bubble {
+    background: rgba(245,240,232,0.07);
+    color: rgba(245,240,232,0.85);
+    border-bottom-left-radius: 2px;
+  }
+  .msg.user .msg-bubble {
+    background: var(--accent);
+    color: var(--cream);
+    border-bottom-right-radius: 2px;
+  }
+  .chat-input-area {
+    padding: 16px 20px;
+    border-top: 1px solid rgba(201,185,154,0.1);
+    display: flex;
+    gap: 12px;
+  }
+  .chat-input {
+    flex: 1;
+    background: rgba(245,240,232,0.06);
+    border: 1px solid rgba(201,185,154,0.15);
+    border-radius: 4px;
+    padding: 10px 14px;
+    color: var(--cream);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .chat-input::placeholder { color: rgba(201,185,154,0.4); }
+  .chat-input:focus { border-color: var(--accent); }
+  .send-btn {
+    background: var(--accent);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    color: var(--cream);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    cursor: none;
+    letter-spacing: 0.1em;
+    transition: background 0.2s, transform 0.15s;
+  }
+  .send-btn:hover { background: var(--clay); transform: scale(0.98); }
+
+  /* Right side info */
+  .chat-info { padding-top: 16px; }
+  .info-item {
+    border-left: 2px solid rgba(201,185,154,0.2);
+    padding: 24px 0 24px 28px;
+    margin-bottom: 8px;
+    transition: border-color 0.2s;
+  }
+  .info-item:hover { border-color: var(--accent); }
+  .info-num {
+    font-size: 10px;
+    color: var(--sand);
+    letter-spacing: 0.2em;
+    margin-bottom: 8px;
+  }
+  .info-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    color: var(--cream);
+    margin-bottom: 8px;
+    font-weight: 400;
+  }
+  .info-desc {
+    font-size: 11px;
+    color: rgba(201,185,154,0.6);
+    line-height: 1.8;
+  }
+
+  /* Styles section */
+  .styles-section {
+    padding: 120px 64px;
+    background: var(--cream);
+  }
+  .styles-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    margin-top: 64px;
+  }
+  .style-card {
+    aspect-ratio: 3/4;
+    position: relative;
+    overflow: hidden;
+    cursor: none;
+  }
+  .style-card-bg {
+    width: 100%; height: 100%;
+    transition: transform 0.5s ease;
+  }
+  .style-card:hover .style-card-bg { transform: scale(1.04); }
+  .style-card-bg.japanese { background: linear-gradient(160deg, #E8E0D5 0%, #D4C4A8 50%, #B8A888 100%); }
+  .style-card-bg.moroccan { background: linear-gradient(160deg, #C4472A 0%, #8B3A1E 40%, #4A1E0A 100%); }
+  .style-card-bg.scandi { background: linear-gradient(160deg, #E8EBF0 0%, #C8D0DC 50%, #9AA8B8 100%); }
+  .style-card-bg.luxury { background: linear-gradient(160deg, #1A1410 0%, #2D2520 50%, #3D3028 100%); }
+  .style-card-bg.korean { background: linear-gradient(160deg, #F0EDE8 0%, #E0D8CC 50%, #C8B8A0 100%); }
+  .style-card-bg.industrial { background: linear-gradient(160deg, #3A3A3A 0%, #2A2A2A 50%, #1A1A1A 100%); }
+
+  /* Decorative room elements */
+  .room-decor {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .room-icon {
+    font-size: 64px;
+    opacity: 0.15;
+  }
+
+  .style-card-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 60%);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 24px;
+  }
+  .style-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 24px;
+    color: var(--cream);
+    font-weight: 300;
+    margin-bottom: 4px;
+  }
+  .style-desc {
+    font-size: 10px;
+    color: rgba(245,240,232,0.6);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+  .style-tag {
+    position: absolute;
+    top: 16px; right: 16px;
+    background: rgba(245,240,232,0.1);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(245,240,232,0.15);
+    padding: 6px 12px;
+    border-radius: 2px;
+    font-size: 9px;
+    color: rgba(245,240,232,0.7);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  /* Features */
+  .features-section {
+    padding: 120px 64px;
+    background: var(--warm);
+  }
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2px;
+    margin-top: 64px;
+  }
+  .feature-card {
+    background: var(--cream);
+    padding: 40px 32px;
+    transition: background 0.3s, transform 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .feature-card::before {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 100%; height: 2px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+  }
+  .feature-card:hover::before { transform: scaleX(1); }
+  .feature-card:hover { transform: translateY(-4px); }
+  .feature-icon {
+    font-size: 28px;
+    margin-bottom: 20px;
+    display: block;
+  }
+  .feature-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    color: var(--dark);
+    margin-bottom: 12px;
+    font-weight: 400;
+  }
+  .feature-desc {
+    font-size: 11px;
+    color: var(--clay);
+    line-height: 1.9;
+  }
+
+  /* CTA section */
+  .cta-section {
+    padding: 120px 64px;
+    background: var(--dark);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .cta-section::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, rgba(139,105,20,0.15) 0%, transparent 70%);
+  }
+  .cta-section h2 { margin-bottom: 20px; }
+  .cta-section p {
+    font-size: 12px;
+    color: var(--sand);
+    margin-bottom: 48px;
+    line-height: 2;
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .cta-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+  .btn-tg {
+    background: #229ED9;
+    color: white;
+    border: none;
+    padding: 18px 40px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: none;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    border-radius: 2px;
+    transition: background 0.2s, transform 0.2s;
+  }
+  .btn-tg:hover { background: #1A8BB8; transform: translateY(-2px); }
+
+  /* Typing animation */
+  .typing {
+    display: flex; gap: 4px; align-items: center;
+    padding: 12px 16px;
+    background: rgba(245,240,232,0.07);
+    border-radius: 8px;
+    border-bottom-left-radius: 2px;
+    width: fit-content;
+  }
+  .typing span {
+    width: 6px; height: 6px;
+    background: rgba(201,185,154,0.5);
+    border-radius: 50%;
+    animation: typing 1.2s infinite;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes typing {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+    30% { transform: translateY(-4px); opacity: 1; }
+  }
+
+  /* Scrollbar */
+  .chat-messages::-webkit-scrollbar { width: 4px; }
+  .chat-messages::-webkit-scrollbar-track { background: transparent; }
+  .chat-messages::-webkit-scrollbar-thumb { background: rgba(201,185,154,0.2); border-radius: 2px; }
+
+  /* 3D Generator Section */
+  .generator-section {
+    padding: 120px 64px;
+    background: var(--cream);
+    position: relative;
+  }
+  .generator-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    margin-top: 64px;
+    align-items: start;
+  }
+  .generator-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .form-label {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--clay);
+  }
+  .form-select, .form-input {
+    background: var(--warm);
+    border: 1px solid var(--sand);
+    border-radius: 2px;
+    padding: 12px 16px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+    cursor: none;
+    appearance: none;
+  }
+  .form-select:focus, .form-input:focus { border-color: var(--accent); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .chip {
+    padding: 8px 16px;
+    border: 1px solid var(--sand);
+    border-radius: 20px;
+    font-size: 11px;
+    color: var(--clay);
+    cursor: none;
+    transition: all 0.2s;
+    background: transparent;
+    font-family: 'DM Mono', monospace;
+  }
+  .chip:hover, .chip.active {
+    background: var(--dark);
+    color: var(--cream);
+    border-color: var(--dark);
+  }
+  .generate-btn {
+    background: var(--dark);
+    color: var(--cream);
+    border: none;
+    padding: 18px 32px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: none;
+    border-radius: 2px;
+    transition: background 0.2s, transform 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .generate-btn:hover { background: var(--accent); transform: translateY(-2px); }
+  .generate-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Result panel */
+  .result-panel {
+    position: sticky;
+    top: 100px;
+  }
+  .result-frame {
+    aspect-ratio: 1;
+    background: var(--warm);
+    border: 1px solid var(--sand);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .result-placeholder {
+    text-align: center;
+    color: var(--sand);
+  }
+  .result-placeholder .big-icon { font-size: 48px; margin-bottom: 16px; display: block; }
+  .result-placeholder p { font-size: 11px; line-height: 1.8; }
+  .result-img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: none;
+  }
+  .result-loading {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    color: var(--clay);
+  }
+  .spinner {
+    width: 40px; height: 40px;
+    border: 2px solid var(--sand);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .result-loading p { font-size: 11px; letter-spacing: 0.1em; }
+  .result-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .result-actions a, .result-actions button {
+    flex: 1;
+    padding: 12px;
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    text-decoration: none;
+    border-radius: 2px;
+    cursor: none;
+    transition: all 0.2s;
+    border: 1px solid var(--sand);
+    color: var(--clay);
+    background: transparent;
+    display: none;
+  }
+  .result-actions a:hover, .result-actions button:hover {
+    background: var(--dark);
+    color: var(--cream);
+    border-color: var(--dark);
+  }
+
+  /* Gallery Section */
+  .gallery-section {
+    padding: 120px 64px;
+    background: var(--dark);
+  }
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    margin-top: 64px;
+  }
+  .gallery-item {
+    aspect-ratio: 4/3;
+    position: relative;
+    overflow: hidden;
+    cursor: none;
+  }
+  .gallery-item img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+    display: block;
+  }
+  .gallery-item:hover img { transform: scale(1.05); }
+  .gallery-item-loading {
+    width: 100%; height: 100%;
+    background: var(--charcoal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .gallery-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 50%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    display: flex;
+    align-items: flex-end;
+    padding: 20px;
+  }
+  .gallery-item:hover .gallery-overlay { opacity: 1; }
+  .gallery-label {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    color: var(--cream);
+  }
+  .gallery-sublabel {
+    font-size: 10px;
+    color: var(--sand);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  /* Image placeholder in chat */
+  .img-placeholder {
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: linear-gradient(135deg, rgba(139,105,20,0.2), rgba(201,185,154,0.1));
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 8px;
+    border: 1px solid rgba(201,185,154,0.15);
+    font-size: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .img-placeholder::after {
+    content: '3D Render Generated';
+    position: absolute;
+    bottom: 8px;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    color: rgba(201,185,154,0.5);
+    text-transform: uppercase;
+  }
+
+  footer {
+    padding: 40px 64px;
+    background: var(--dark);
+    border-top: 1px solid rgba(201,185,154,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  footer p {
+    font-size: 10px;
+    color: rgba(201,185,154,0.4);
+    letter-spacing: 0.1em;
+  }
+
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; }
+    .hero-right { height: 50vh; }
+    .chat-container { grid-template-columns: 1fr; }
+    .styles-grid { grid-template-columns: repeat(2, 1fr); }
+    .features-grid { grid-template-columns: repeat(2, 1fr); }
+    nav { padding: 20px 24px; }
+    .hero-left, .chat-section, .styles-section, .features-section, .cta-section { padding-left: 24px; padding-right: 24px; }
+    footer { flex-direction: column; gap: 16px; text-align: center; }
+    .nav-links { gap: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<nav>
+  <div class="logo">Smart <span>Interior</span> AI</div>
+  <div class="nav-links">
+    <a href="#chat">Try it</a>
+    <a href="#styles">Styles</a>
+    <a href="#features">Features</a>
+    <a href="https://t.me/smartinterior_ai_bot" class="nav-tg">Open in Telegram →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-left">
+    <div class="hero-tag">AI-Powered Interior Design</div>
+    <h1>Design your<br><em>dream space</em><br>with AI</h1>
+    <p class="hero-sub">Describe your room and get a personalized interior design plan with a photorealistic 3D render — instantly.</p>
+    <div class="hero-cta">
+      <a href="#chat" class="btn-primary">Try the AI →</a>
+      <a href="https://t.me/smartinterior_ai_bot" class="btn-secondary">Open Telegram Bot</a>
+    </div>
+  </div>
+  <div class="hero-right">
+    <div class="hero-room-placeholder">
+      <div class="room-grid">
+        <div class="room-cell" data-label="Bedroom">
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:48px;opacity:0.12;">🛏</div>
+        </div>
+        <div class="room-cell" data-label="Living Room">
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:48px;opacity:0.12;">🛋</div>
+        </div>
+        <div class="room-cell" data-label="Kitchen">
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:48px;opacity:0.12;">🍳</div>
+        </div>
+        <div class="room-cell" data-label="Office">
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:48px;opacity:0.12;">🖥</div>
+        </div>
+      </div>
+    </div>
+    <div class="hero-badge">
+      <p>Powered by</p>
+      <strong>Groq AI + n8n</strong>
+    </div>
+  </div>
+</section>
+
+<!-- CHAT -->
+<section class="chat-section" id="chat">
+  <div class="section-header">
+    <div>
+      <div class="section-tag">Live Demo</div>
+      <h2>Chat with your<br><em>AI designer</em></h2>
+    </div>
+  </div>
+  <div class="chat-container">
+    <div class="chat-window">
+      <div class="chat-header">
+        <div class="chat-avatar">🏠</div>
+        <div>
+          <div class="chat-name">Smart Interior AI</div>
+          <div class="chat-status"><span class="status-dot"></span>Online</div>
+        </div>
+      </div>
+      <div class="chat-messages" id="chatMessages">
+        <div class="msg bot" style="animation-delay:0.1s">
+          <div class="msg-avatar bot">🏠</div>
+          <div class="msg-bubble">Hello! I'm your personal AI interior designer. Tell me about your space — room type, size, style preferences, and budget — and I'll create a custom design plan + 3D visualization for you. ✨</div>
+        </div>
+      </div>
+      <div class="chat-input-area">
+        <input class="chat-input" id="chatInput" type="text" placeholder="Describe your room..." />
+        <button class="send-btn" onclick="sendMessage()">Send →</button>
+      </div>
+    </div>
+
+    <div class="chat-info">
+      <div class="info-item">
+        <div class="info-num">01</div>
+        <div class="info-title">Describe your space</div>
+        <div class="info-desc">Tell the AI about your room type, size, style preferences, colors, and budget constraints.</div>
+      </div>
+      <div class="info-item">
+        <div class="info-num">02</div>
+        <div class="info-title">AI adapts & designs</div>
+        <div class="info-desc">The agent asks clarifying questions and generates a personalized design plan tailored to your needs.</div>
+      </div>
+      <div class="info-item">
+        <div class="info-num">03</div>
+        <div class="info-title">Get your 3D render</div>
+        <div class="info-desc">Receive a photorealistic 3D visualization of your future interior — ready to share or use as reference.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STYLES -->
+<section class="styles-section" id="styles">
+  <div class="section-tag" style="color:var(--clay)">Design Styles</div>
+  <h2 style="color:var(--dark)">Every style,<br><em>perfectly crafted</em></h2>
+
+  <div class="styles-grid">
+    <div class="style-card">
+      <div class="style-card-bg japanese"></div>
+      <div class="room-decor"><span class="room-icon">⛩</span></div>
+      <div class="style-card-overlay">
+        <div class="style-name">Japanese Zen</div>
+        <div class="style-desc">Minimalist · Natural · Serene</div>
+      </div>
+      <div class="style-tag">Asia</div>
+    </div>
+    <div class="style-card">
+      <div class="style-card-bg moroccan"></div>
+      <div class="room-decor"><span class="room-icon">🕌</span></div>
+      <div class="style-card-overlay">
+        <div class="style-name">Moroccan Boho</div>
+        <div class="style-desc">Warm · Vibrant · Layered</div>
+      </div>
+      <div class="style-tag">Africa</div>
+    </div>
+    <div class="style-card">
+      <div class="style-card-bg scandi"></div>
+      <div class="room-decor"><span class="room-icon">🌿</span></div>
+      <div class="style-card-overlay">
+        <div class="style-name">Scandinavian</div>
+        <div class="style-desc">Clean · Cozy · Functional</div>
+      </div>
+      <div class="style-tag">Europe</div>
+    </div>
+    <div class="style-card">
+      <div class="style-card-bg luxury"></div>
+      <div class="room-decor"><span class="room-icon" style="color:gold">✦</span></div>
+      <div class="style-card-overlay">
+        <div class="style-name">Luxury Modern</div>
+        <div class="style-desc">Premium · Dark · Refined</div>
+      </div>
+      <div class="style-tag">Premium</div>
+    </div>
+    <div class="style-card">
+      <div class="style-card-bg korean"></div>
+      <div class="room-decor"><span class="room-icon">🌸</span></div>
+      <div class="style-card-overlay">
+        <div class="style-name">Korean Minimal</div>
+        <div class="style-desc">Soft · Airy · Elegant</div>
+      </div>
+      <div class="style-tag">Asia</div>
+    </div>
+    <div class="style-card">
+      <div class="style-card-bg industrial"></div>
+      <div class="room-decor"><span class="room-icon">🏗</span></div>
+      <div class="style-card-overlay">
+        <div class="style-name">Industrial Loft</div>
+        <div class="style-desc">Raw · Urban · Bold</div>
+      </div>
+      <div class="style-tag">NY Style</div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features-section" id="features">
+  <div class="section-tag" style="color:var(--clay)">Why Smart Interior AI</div>
+  <h2 style="color:var(--dark)">More than just<br><em>automation</em></h2>
+  <div class="features-grid">
+    <div class="feature-card">
+      <span class="feature-icon">🧠</span>
+      <div class="feature-title">Adaptive Intelligence</div>
+      <div class="feature-desc">Asks the right questions and adapts its suggestions based on your unique preferences and constraints.</div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🎨</span>
+      <div class="feature-title">3D Visualization</div>
+      <div class="feature-desc">Generates photorealistic isometric 3D renders of your space — not just text, but visual proof.</div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">💬</span>
+      <div class="feature-title">Conversational Flow</div>
+      <div class="feature-desc">Natural back-and-forth dialogue. The AI remembers context and builds on previous answers.</div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">💰</span>
+      <div class="feature-title">Budget-Aware</div>
+      <div class="feature-desc">Designs adapt to low, medium, or high budgets — always practical, never generic.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 3D GENERATOR -->
+<section class="generator-section" id="generate">
+  <div class="section-tag" style="color:var(--clay)">3D Room Generator</div>
+  <h2 style="color:var(--dark)">Generate your<br><em>room in 3D</em></h2>
+
+  <div class="generator-layout">
+    <div class="generator-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Room Type</label>
+          <select class="form-select" id="roomType">
+            <option value="bedroom">Bedroom</option>
+            <option value="living room">Living Room</option>
+            <option value="kitchen">Kitchen</option>
+            <option value="home office">Home Office</option>
+            <option value="bathroom">Bathroom</option>
+            <option value="dining room">Dining Room</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Room Size</label>
+          <select class="form-select" id="roomSize">
+            <option value="small cozy 15m2">Small (15m²)</option>
+            <option value="medium 25m2">Medium (25m²)</option>
+            <option value="large spacious 40m2">Large (40m²)</option>
+            <option value="open plan 60m2">Open Plan (60m²)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Style</label>
+        <div class="chips" id="styleChips">
+          <button class="chip active" data-val="Scandinavian minimalist">Scandinavian</button>
+          <button class="chip" data-val="Japanese zen">Japanese Zen</button>
+          <button class="chip" data-val="Moroccan boho">Moroccan Boho</button>
+          <button class="chip" data-val="luxury modern dark">Luxury Modern</button>
+          <button class="chip" data-val="Korean minimal soft">Korean Minimal</button>
+          <button class="chip" data-val="industrial loft NYC">Industrial Loft</button>
+          <button class="chip" data-val="French classic elegant">French Classic</button>
+          <button class="chip" data-val="Bali tropical natural">Bali Tropical</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Color Palette</label>
+        <div class="chips" id="colorChips">
+          <button class="chip active" data-val="white and beige neutral tones">White & Beige</button>
+          <button class="chip" data-val="dark charcoal and gold accents">Dark & Gold</button>
+          <button class="chip" data-val="warm terracotta and rust">Terracotta</button>
+          <button class="chip" data-val="cool blue and grey">Cool Blues</button>
+          <button class="chip" data-val="sage green and natural wood">Green & Wood</button>
+          <button class="chip" data-val="blush pink and rose gold">Blush Pink</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Extra Details (optional)</label>
+        <input class="form-input" id="extraDetails" type="text" placeholder="e.g. large windows, plants, fireplace...">
+      </div>
+
+      <button class="generate-btn" id="generateBtn" onclick="generate3D()">
+        <span id="btnText">✦ Generate 3D Room</span>
+      </button>
+    </div>
+
+    <div class="result-panel">
+      <div class="result-frame" id="resultFrame">
+        <div class="result-placeholder" id="resultPlaceholder">
+          <span class="big-icon">🏠</span>
+          <p>Your 3D room will<br>appear here</p>
+        </div>
+        <div class="result-loading" id="resultLoading">
+          <div class="spinner"></div>
+          <p>Generating your room...</p>
+        </div>
+        <img class="result-img" id="resultImg" alt="3D Room Render">
+      </div>
+      <div class="result-actions" id="resultActions">
+        <a id="downloadLink" href="#" download="my-room-design.jpg">↓ Download</a>
+        <button onclick="generate3D()">↻ Regenerate</button>
+        <button id="likeBtn" onclick="saveDesign()" style="flex:1;padding:12px;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;border:1px solid var(--sand);color:var(--clay);background:transparent;border-radius:2px;cursor:pointer;display:none" onmouseover="this.style.background='var(--dark)';this.style.color='var(--cream)'" onmouseout="this.style.background='transparent';this.style.color='var(--clay)'">♡ Save</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SAVED DESIGNS -->
+<section id="saved" style="padding:80px 64px;background:var(--cream)">
+  <div class="section-tag" style="color:var(--clay)">Your Collection</div>
+  <h2 style="color:var(--dark);font-family:'Cormorant Garamond',serif;font-weight:300;font-size:clamp(36px,4vw,56px);margin-bottom:8px">Saved <em style="color:var(--accent);font-style:italic">Designs</em></h2>
+  <p style="font-size:11px;color:var(--clay);letter-spacing:0.05em;margin-bottom:40px">Designs you liked — stored in your browser</p>
+  <div id="savedGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px"></div>
+  <p id="savedEmpty" style="color:var(--sand);font-size:12px;letter-spacing:0.1em;margin-top:24px">No saved designs yet. Generate a room and click ♡ Save!</p>
+</section>
+
+<!-- GALLERY -->
+<section class="gallery-section" id="gallery">
+  <div class="section-tag" style="color:var(--sand)">Style Gallery</div>
+  <h2>Explore our<br><em>design gallery</em></h2>
+  <div class="gallery-grid" id="galleryGrid"></div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div style="position:relative;z-index:1">
+    <div class="section-tag" style="margin-bottom:24px">Get Started Today</div>
+    <h2>Ready to design<br><em>your space?</em></h2>
+    <p>Available on both web and Telegram. Start your conversation with the AI designer right now — it's free.</p>
+    <div class="cta-buttons">
+      <a href="#generate" class="btn-primary">Generate 3D Room →</a>
+      <a href="https://t.me/smartinterior_ai_bot" class="btn-tg">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248l-1.97 9.289c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L8.32 14.617l-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.496.969z"/></svg>
+        Open Telegram Bot
+      </a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="logo" style="font-size:16px">Smart <span style="color:var(--accent);font-style:italic">Interior</span> AI</div>
+  <p>Built with n8n · Groq AI · Pollinations API · Telegram</p>
+  <p>Final Project · AI Agent Development · 2026</p>
+</footer>
+
+<script>
+  // Cursor
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  document.addEventListener('mousemove', e => {
+    cursor.style.left = e.clientX + 'px';
+    cursor.style.top = e.clientY + 'px';
+    setTimeout(() => {
+      ring.style.left = e.clientX + 'px';
+      ring.style.top = e.clientY + 'px';
+    }, 80);
+  });
+
+  // Chips
+  document.querySelectorAll('#styleChips .chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('#styleChips .chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+    });
+  });
+  document.querySelectorAll('#colorChips .chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('#colorChips .chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+    });
+  });
+
+  // 3D Generator
+  function generate3D() {
+    const roomType = document.getElementById('roomType').value;
+    const roomSize = document.getElementById('roomSize').value;
+    const style = document.querySelector('#styleChips .chip.active')?.dataset.val || 'Scandinavian';
+    const color = document.querySelector('#colorChips .chip.active')?.dataset.val || 'white and beige';
+    const extra = document.getElementById('extraDetails').value;
+
+    const prompt = `isometric cutaway ${roomType} interior 3D render, ${roomSize}, ${style} style, ${color} color palette, ${extra ? extra + ', ' : ''}warm interior lighting, ultra realistic detailed furniture, architectural visualization, 8k quality, cross section view`;
+
+    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&nologo=true&seed=${Math.floor(Math.random()*99999)}`;
+
+    // Show loading
+    document.getElementById('resultPlaceholder').style.display = 'none';
+    document.getElementById('resultImg').style.display = 'none';
+    document.getElementById('resultLoading').style.display = 'flex';
+    document.getElementById('resultActions').style.display = 'none';
+    document.querySelectorAll('#resultActions a, #resultActions button').forEach(el => el.style.display = 'none');
+    document.getElementById('generateBtn').disabled = true;
+    document.getElementById('btnText').textContent = '⏳ Generating...';
+
+    const img = document.getElementById('resultImg');
+    img.onload = () => {
+      document.getElementById('resultLoading').style.display = 'none';
+      img.style.display = 'block';
+      document.getElementById('resultActions').style.display = 'flex';
+      document.querySelectorAll('#resultActions a, #resultActions button').forEach(el => el.style.display = 'block');
+      document.getElementById('downloadLink').href = url;
+      document.getElementById('generateBtn').disabled = false;
+      document.getElementById('btnText').textContent = '✦ Generate 3D Room';
+    };
+    img.onerror = () => {
+      document.getElementById('resultLoading').style.display = 'none';
+      document.getElementById('resultPlaceholder').style.display = 'block';
+      document.getElementById('resultPlaceholder').querySelector('p').textContent = 'Generation failed. Try again.';
+      document.getElementById('generateBtn').disabled = false;
+      document.getElementById('btnText').textContent = '✦ Generate 3D Room';
+    };
+    img.src = url;
+  }
+
+  // Gallery
+  const galleryItems = [
+    { prompt: 'Scandinavian minimalist bedroom, white oak furniture, soft linen, warm lighting, isometric 3D render, ultra realistic', label: 'Scandinavian Bedroom', sub: 'Minimalist · Nordic' },
+    { prompt: 'Japanese zen living room, tatami floor, bamboo, shoji screens, bonsai, soft natural light, isometric 3D render', label: 'Japanese Zen', sub: 'Calm · Natural' },
+    { prompt: 'Moroccan boho living room, terracotta walls, brass lanterns, layered rugs, vibrant colors, isometric 3D render', label: 'Moroccan Boho', sub: 'Warm · Vibrant' },
+    { prompt: 'luxury modern dark bedroom, black marble, gold accents, velvet furniture, dramatic lighting, isometric 3D render', label: 'Luxury Modern', sub: 'Premium · Dark' },
+    { prompt: 'Bali tropical living room, natural rattan, plants, open air, warm wood, isometric 3D render, ultra realistic', label: 'Bali Tropical', sub: 'Natural · Serene' },
+    { prompt: 'industrial loft kitchen, exposed brick, steel beams, concrete countertops, Edison bulbs, isometric 3D render', label: 'Industrial Loft', sub: 'Raw · Urban' },
+  ];
+
+  const grid = document.getElementById('galleryGrid');
+  galleryItems.forEach((item, i) => {
+    const seed = 1000 + i * 137;
+    const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(item.prompt)}?width=800&height=600&nologo=true&seed=${seed}`;
+
+    const div = document.createElement('div');
+    div.className = 'gallery-item';
+    div.innerHTML = `
+      <div class="gallery-item-loading">
+        <div class="spinner" style="width:28px;height:28px;border-width:1px"></div>
+        <p style="font-size:10px;color:rgba(201,185,154,0.4);letter-spacing:0.1em">Loading...</p>
+      </div>
+      <div class="gallery-overlay">
+        <div>
+          <div class="gallery-label">${item.label}</div>
+          <div class="gallery-sublabel">${item.sub}</div>
+        </div>
+      </div>`;
+    grid.appendChild(div);
+
+    const img = new Image();
+    img.onload = () => {
+      img.className = '';
+      div.innerHTML = `<img src="${imgUrl}" alt="${item.label}"><div class="gallery-overlay"><div><div class="gallery-label">${item.label}</div><div class="gallery-sublabel">${item.sub}</div></div></div>`;
+    };
+    img.src = imgUrl;
+  });
+
+  // Chat history for AI
+  let chatHistory = [];
+
+  const N8N_WEBHOOK = 'https://aruz.app.n8n.cloud/webhook/b17c6fe8-8e32-4da4-9e27-265af03e4b9e';
+
+  const SYSTEM_PROMPT = `You are Smart Interior AI — a professional interior designer.
+Your goal is to understand the user request, extract key parameters, adapt design to constraints, and explain decisions clearly.
+
+STEP 1 — If information is missing, ask short questions about: Room size, Room type, Style, Budget, Color preferences. Ask ONLY what is missing.
+
+STEP 2 — When you have enough data, generate a design in this EXACT structure:
+✨ Your Design Plan:
+- Layout: [description]
+- Colors: [description]
+- Furniture: [description]
+💡 Why this fits you: [explanation]
+🔄 Alternative idea: [one alternative]
+🔥 Pro tip: [one practical tip]
+
+RULES: Be concise, under 150 words. Sound like a real designer.
+
+IMPORTANT: When you have enough info to show a design, add this at the very end on a new line:
+RENDER: [detailed English description for 3D render, include style, colors, furniture, lighting]`;
+
+  function addMessage(text, type) {
+    const msgs = document.getElementById('chatMessages');
+    const msg = document.createElement('div');
+    msg.className = `msg ${type}`;
+    msg.style.animationDelay = '0s';
+    const avatar = document.createElement('div');
+    avatar.className = `msg-avatar ${type}`;
+    avatar.textContent = type === 'bot' ? '🏠' : '👤';
+    const bubble = document.createElement('div');
+    bubble.className = 'msg-bubble';
+    bubble.style.whiteSpace = 'pre-line';
+
+    // Strip RENDER: line from displayed text
+    const displayText = text.replace(/\nRENDER:.*$/s, '').trim();
+    bubble.textContent = displayText;
+
+    msg.appendChild(avatar);
+    msg.appendChild(bubble);
+    msgs.appendChild(msg);
+    msgs.scrollTop = msgs.scrollHeight;
+    return bubble;
+  }
+
+  function addImageToChat(prompt) {
+    const msgs = document.getElementById('chatMessages');
+    const msg = document.createElement('div');
+    msg.className = 'msg bot';
+    msg.style.animationDelay = '0s';
+    const avatar = document.createElement('div');
+    avatar.className = 'msg-avatar bot';
+    avatar.textContent = '🏠';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'msg-bubble';
+    bubble.style.padding = '8px';
+
+    const loadingDiv = document.createElement('div');
+    loadingDiv.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px;color:rgba(201,185,154,0.6);font-size:11px;';
+    loadingDiv.innerHTML = '<div class="spinner" style="width:20px;height:20px;border-width:1px;flex-shrink:0"></div> Generating 3D render...';
+    bubble.appendChild(loadingDiv);
+
+    msg.appendChild(avatar);
+    msg.appendChild(bubble);
+    msgs.appendChild(msg);
+    msgs.scrollTop = msgs.scrollHeight;
+
+    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(
+      'isometric cutaway interior 3D render, ' + prompt + ', warm interior lighting, ultra realistic detailed furniture, architectural visualization, 8k quality'
+    )}?width=800&height=800&nologo=true&seed=${Math.floor(Math.random()*99999)}`;
+
+    const img = new Image();
+    img.style.cssText = 'width:100%;border-radius:6px;display:block;';
+    img.onload = () => {
+      bubble.innerHTML = '';
+      bubble.style.padding = '8px';
+      bubble.appendChild(img);
+
+      const dl = document.createElement('a');
+      dl.href = url;
+      dl.download = 'room-design.jpg';
+      dl.style.cssText = 'display:block;margin-top:8px;font-size:10px;color:rgba(201,185,154,0.6);letter-spacing:0.1em;text-align:center;text-decoration:none;';
+      dl.textContent = '↓ Download render';
+      bubble.appendChild(dl);
+      msgs.scrollTop = msgs.scrollHeight;
+    };
+    img.onerror = () => {
+      loadingDiv.textContent = '⚠ Could not generate image. Try again.';
+    };
+    img.src = url;
+  }
+
+  function showTyping() {
+    const msgs = document.getElementById('chatMessages');
+    const typing = document.createElement('div');
+    typing.className = 'msg bot';
+    typing.id = 'typingIndicator';
+    typing.style.animationDelay = '0s';
+    typing.innerHTML = `<div class="msg-avatar bot">🏠</div><div class="typing"><span></span><span></span><span></span></div>`;
+    msgs.appendChild(typing);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function removeTyping() {
+    const t = document.getElementById('typingIndicator');
+    if (t) t.remove();
+  }
+
+  async function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    addMessage(text, 'user');
+    chatHistory.push({ role: 'user', content: text });
+    input.value = '';
+    input.disabled = true;
+    document.querySelector('.send-btn').disabled = true;
+    showTyping();
+
+    try {
+      const res = await fetch(N8N_WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: text,
+          history: chatHistory,
+          system: SYSTEM_PROMPT
+        })
+      });
+      const data = await res.json();
+      const reply = data.output || data.text || data.message || data.response || 'Sorry, something went wrong.';
+
+      removeTyping();
+      addMessage(reply, 'bot');
+      chatHistory.push({ role: 'assistant', content: reply });
+
+      // Check for RENDER: tag and generate image
+      const renderMatch = reply.match(/RENDER:\s*(.+?)$/ms);
+      if (renderMatch) {
+        setTimeout(() => addImageToChat(renderMatch[1].trim()), 500);
+      }
+    } catch (e) {
+      removeTyping();
+      addMessage('Connection error. Please try again.', 'bot');
+    }
+
+    input.disabled = false;
+    document.querySelector('.send-btn').disabled = false;
+    input.focus();
+  }
+
+
+  // ── SAVE / LIKE SYSTEM ──────────────────────────────────────────────
+  let currentImgUrl = '';
+
+  function saveDesign() {
+    if (!currentImgUrl) return;
+    const room = document.getElementById('roomType')?.value || 'Room';
+    const styleChip = document.querySelector('#styleChips .chip.active');
+    const style = styleChip ? styleChip.textContent : 'Custom';
+    const saved = JSON.parse(localStorage.getItem('savedDesigns') || '[]');
+    const entry = { url: currentImgUrl, style, room, date: new Date().toLocaleDateString() };
+    saved.unshift(entry);
+    localStorage.setItem('savedDesigns', JSON.stringify(saved.slice(0, 50)));
+    const btn = document.getElementById('likeBtn');
+    btn.textContent = '♥ Saved!';
+    btn.style.color = '#8B6914';
+    btn.style.borderColor = '#8B6914';
+    setTimeout(() => { btn.textContent = '♡ Save'; btn.style.color = ''; btn.style.borderColor = ''; }, 2000);
+    renderSaved();
+  }
+
+  function renderSaved() {
+    const saved = JSON.parse(localStorage.getItem('savedDesigns') || '[]');
+    const grid = document.getElementById('savedGrid');
+    const empty = document.getElementById('savedEmpty');
+    if (!grid) return;
+    if (saved.length === 0) { grid.innerHTML = ''; empty.style.display = 'block'; return; }
+    empty.style.display = 'none';
+    grid.innerHTML = saved.map((d, i) => `
+      <div style="border:1px solid var(--sand);border-radius:4px;overflow:hidden;background:var(--warm);position:relative">
+        <img src="${d.url}" alt="${d.style}" style="width:100%;aspect-ratio:1;object-fit:cover;display:block" loading="lazy">
+        <div style="padding:14px 16px;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--dark)">${d.room}</div>
+            <div style="font-size:10px;color:var(--clay);letter-spacing:0.1em;text-transform:uppercase;margin-top:2px">${d.style} · ${d.date}</div>
+          </div>
+          <button onclick="removeSaved(${i})" style="background:none;border:none;color:var(--sand);cursor:pointer;font-size:18px;padding:4px">✕</button>
+        </div>
+        <a href="${d.url}" download="design.jpg" style="display:block;text-align:center;padding:10px;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--clay);text-decoration:none;border-top:1px solid var(--sand)">↓ Download</a>
+      </div>`).join('');
+  }
+
+  function removeSaved(i) {
+    const saved = JSON.parse(localStorage.getItem('savedDesigns') || '[]');
+    saved.splice(i, 1);
+    localStorage.setItem('savedDesigns', JSON.stringify(saved));
+    renderSaved();
+  }
+
+  // Track current image and show like button after generation
+  const _origGenerate = window.generate3D;
+  window.generate3D = function() {
+    _origGenerate();
+    setTimeout(() => {
+      const img = document.getElementById('resultImg');
+      const origOnload = img.onload;
+      img.onload = function() {
+        if (origOnload) origOnload.call(this);
+        currentImgUrl = img.src;
+        const lb = document.getElementById('likeBtn');
+        if (lb) lb.style.display = 'block';
+      };
+    }, 100);
+  };
+
+  // Add Saved to nav
+  const navLinksEl = document.querySelector('.nav-links');
+  if (navLinksEl) {
+    const savedLink = document.createElement('a');
+    savedLink.href = '#saved';
+    savedLink.textContent = '♡ Saved';
+    navLinksEl.insertBefore(savedLink, navLinksEl.lastElementChild);
+  }
+
+  renderSaved();
+
+  document.getElementById('chatInput').addEventListener('keypress', e => {
+    if (e.key === 'Enter') sendMessage();
+  });
+
+  // Update nav
+  document.querySelector('.nav-links').innerHTML = `
+    <a href="#chat">Chat</a>
+    <a href="#generate">3D Generator</a>
+    <a href="#gallery">Gallery</a>
+    <a href="https://t.me/smartinterior_ai_bot" class="nav-tg">Telegram →</a>`;
+</script>
+</body>
+</html>
